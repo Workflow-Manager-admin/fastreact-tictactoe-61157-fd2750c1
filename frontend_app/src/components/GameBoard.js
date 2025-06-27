@@ -49,7 +49,11 @@ function GameBoard() {
 
   // Update all state fields from backend response obj
   function updateGameState(data) {
-    setSquares(data.board);
+    // Defensive: make sure board is an array of strings, not objects
+    let cleanBoard = Array.isArray(data.board)
+      ? data.board.map(cell => (typeof cell === "string" ? cell : ""))
+      : Array(9).fill("");
+    setSquares(cleanBoard);
     setCurrentPlayer(data.current_player ?? "X");
     setWinner(data.winner);
     setIsDraw(data.is_draw);

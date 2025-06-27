@@ -1,13 +1,26 @@
 import React from "react";
 
-// PUBLIC_INTERFACE
+/**
+ * Square cell for the Tic Tac Toe board.
+ * @param {string|null|object} value - The player's symbol ("X", "O", or empty/unknown).
+ * @param {function} onClick - Callback when the square is clicked.
+ * @param {boolean} highlight - If true, highlights the square (e.g., for win).
+ */
 function Square({ value, onClick, highlight }) {
-  /**
-   * Square cell for the Tic Tac Toe board.
-   * @param {string|null} value - The player's symbol ("X", "O", or null).
-   * @param {function} onClick - Callback when the square is clicked.
-   * @param {boolean} highlight - If true, highlights the square (e.g., for win).
-   */
+  // Defensive rendering: Only show 'X', 'O', or empty (never render an object)
+  let displayValue = "";
+  if (typeof value === "string") {
+    displayValue = value === "X" || value === "O" ? value : "";
+  } else if (value && typeof value === "object") {
+    // Warn in development if value is not string
+    if (process.env.NODE_ENV === "development") {
+      // eslint-disable-next-line no-console
+      console.warn("Square received object as value! Will render empty cell.", value);
+    }
+    displayValue = "";
+  } else {
+    displayValue = "";
+  }
   return (
     <button
       className="ttt-square"
@@ -21,16 +34,16 @@ function Square({ value, onClick, highlight }) {
         borderRadius: "8px",
         color: "var(--text-primary)",
         fontWeight: "600",
-        cursor: value ? "default" : "pointer",
+        cursor: displayValue ? "default" : "pointer",
         transition: "background-color 0.15s",
         outline: "none",
         margin: "2px"
       }}
-      disabled={Boolean(value)}
-      aria-label={value ? `Square contains ${value}` : "Empty square"}
+      disabled={Boolean(displayValue)}
+      aria-label={displayValue ? `Square contains ${displayValue}` : "Empty square"}
       data-testid="ttt-square"
     >
-      {value}
+      {displayValue}
     </button>
   );
 }
