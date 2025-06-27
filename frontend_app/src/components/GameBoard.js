@@ -1,68 +1,92 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Square from "./Square";
 import GameStatus from "./GameStatus";
 import ResetButton from "./ResetButton";
-
-// Helper function to check winner
-function calculateWinner(squares) {
-  // Indices for all winning lines
-  const lines = [
-    [0,1,2],[3,4,5],[6,7,8],  // Rows
-    [0,3,6],[1,4,7],[2,5,8],  // Cols
-    [0,4,8],[2,4,6]           // Diagonals
-  ];
-  for (let line of lines) {
-    const [a,b,c] = line;
-    if (
-      squares[a] &&
-      squares[a] === squares[b] &&
-      squares[a] === squares[c]
-    ) {
-      return { winner: squares[a], line };
-    }
-  }
-  return null;
-}
+import {
+  startGame,
+  getGameState,
+  makeMove,
+  resetGame,
+} from "../api";
 
 // PUBLIC_INTERFACE
 function GameBoard() {
   /**
-   * GameBoard - 3x3 Tic Tac Toe grid and logic (standalone, local state for now).
+   * GameBoard - 3x3 Tic Tac Toe grid and backend state.
+   * Wires up all backend_api endpoints for gameplay, state, and error handling.
    */
 
-  // Demo initial state/hardcode for first render. Start with some moves
-  const [squares, setSquares] = useState([
-    "X", "O", "X",
-    "O", "X", "",
-    "", "O", ""
-  ]);
-  const [xIsNext, setXIsNext] = useState(true);
+  const [squares, setSquares] = useState(Array(9).fill(""));
+  const [currentPlayer, setCurrentPlayer] = useState("X");
+  const [winner, setWinner] = useState(null);
+  const [isDraw, setIsDraw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [highlightLine, setHighlightLine] = useState([]);
 
-  // Winner logic (standalone)
-  const win = calculateWinner(squares);
-  const isDraw = !win && squares.every((val) => val);
+  // Fetch latest state on load
+  useEffect(() => {
+    // Try to fetch current game state, else start a new game
+    (async () => {
+      setLoading(true);
+      setError("");
+      try {
+        let data;
+        try {
+          data = await getGameState();
+        } catch (e) {
+          // No game in progress? Try to start one
+          data = await startGame();
+        }
+        updateGameState(data);
+      } catch (e) {
+        setError("Failed to load game. Backend unavailable?");
+      }
+      setLoading(false);
+    })();
+    // eslint-disable-next-line
+  }, []);
 
-  // Handle clicking a square (only active if game not finished)
-  function handleClick(idx) {
-    if (win || squares[idx]) return;
-    const nextSquares = squares.slice();
-    nextSquares[idx] = xIsNext ? "X" : "O";
-    setSquares(nextSquares);
-    setXIsNext(!xIsNext);
+  // Update all state fields from backend response obj
+  function updateGameState(data) {
+    setSquares(data.board);
+    setCurrentPlayer(data.current_player ?? "X");
+    setWinner(data.winner);
+    setIsDraw(data.is_draw);
+    setHighlightLine(data.win_line || []);
   }
 
-  // Handle reset
-  function handleReset() {
-    setSquares(["", "", "", "", "", "", "", "", ""]);
-    setXIsNext(true);
+  // Handle clicking a square (POST move)
+  async function handleClick(idx) {
+    if (loading || winner || isDraw || squares[idx]) return;
+    setLoading(true);
+    setError("");
+    try {
+      const data = await makeMove(idx);
+      updateGameState(data);
+    } catch (e) {
+      setError(e.message || "Move failed.");
+    }
+    setLoading(false);
   }
 
-  // Render grid 3x3
+  // Handle game reset
+  async function handleReset() {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await resetGame();
+      updateGameState(data);
+    } catch (e) {
+      setError("Reset failed.");
+    }
+    setLoading(false);
+  }
+
+  // Render square (highlight if part of win_line)
   function renderSquare(i) {
     const highlight =
-      win && win.line.includes(i)
-        ? true
-        : false;
+      Array.isArray(highlightLine) && highlightLine.includes(i);
     return (
       <Square
         key={i}
@@ -84,10 +108,15 @@ function GameBoard() {
       data-testid="ttt-board-wrapper"
     >
       <GameStatus
-        nextPlayer={xIsNext ? "X" : "O"}
-        winner={win && win.winner}
+        nextPlayer={winner || isDraw ? null : currentPlayer}
+        winner={winner}
         isDraw={isDraw}
       />
+      {error && (
+        <div style={{ color: "#e74c3c", fontWeight: 500, marginBottom: 8 }}>
+          {error}
+        </div>
+      )}
       <div
         className="ttt-board"
         style={{
@@ -98,7 +127,9 @@ function GameBoard() {
           background: "var(--bg-secondary)",
           borderRadius: "12px",
           boxShadow: "0 2px 14px rgba(0,0,0,0.06)",
-          padding: "18px"
+          padding: "18px",
+          opacity: loading ? 0.7 : 1,
+          pointerEvents: loading ? "none" : undefined,
         }}
         data-testid="ttt-board"
       >
@@ -107,6 +138,11 @@ function GameBoard() {
           .map((_, i) => renderSquare(i))}
       </div>
       <ResetButton onClick={handleReset} />
+      {loading && (
+        <div style={{ fontSize: "0.88em", color: "#888", marginTop: 10 }}>
+          Loading...
+        </div>
+      )}
     </div>
   );
 }
