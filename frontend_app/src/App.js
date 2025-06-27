@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
 import './App.css';
+import GameBoard from "./components/GameBoard";
 
 // PUBLIC_INTERFACE
 function App() {
@@ -18,7 +18,7 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
+      <header className="App-header" style={{minHeight: "100vh", justifyContent: "flex-start", padding: "32px 0 0 0"}}>
         <button 
           className="theme-toggle" 
           onClick={toggleTheme}
@@ -26,21 +26,11 @@ function App() {
         >
           {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
         </button>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+        <h1 style={{fontSize: "2.2rem", margin: "24px 0 0 0", fontWeight: 800, letterSpacing: "0.03em"}}>Tic Tac Toe</h1>
+        <GameBoard />
+        <div style={{marginTop: "16px", fontSize: "0.8rem", color: "var(--text-secondary)"}}>
+          <span>Modern minimal React UI • Kavia+Starter</span>
+        </div>
       </header>
     </div>
   );

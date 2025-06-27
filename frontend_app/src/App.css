@@ -102,3 +102,20 @@
     font-size: 12px;
   }
 }
+
+/* Tic Tac Toe board custom styles for future use (mostly stylized with inline style) */
+.ttt-square:focus {
+  outline: 2px solid var(--text-secondary);
+}
+.ttt-square[disabled] {
+  background: var(--border-color);
+  color: var(--text-secondary);
+  opacity: 0.55;
+  cursor: default;
+}
+.ttt-status {
+  user-select: none;
+}
+.ttt-reset-btn:hover {
+  background: #1761b2;
+}
