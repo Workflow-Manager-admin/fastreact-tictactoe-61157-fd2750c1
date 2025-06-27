@@ -1,0 +1,4 @@
+{
+    "command": "npm run test",
+    "working_directory": "/home/kavia/workspace/code-generation/fastreact-tictactoe-61157-fd2750c1/frontend_app"
+}
