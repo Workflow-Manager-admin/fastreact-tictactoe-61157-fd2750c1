@@ -2,7 +2,11 @@
 // API client for backend_api communication
 //
 
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3001"; // allow .env override
+/**
+ * API base URL for backend communication.
+ * Uses REACT_APP_API_URL from .env; fallback to localhost for dev.
+ */
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3001";
 
 // PUBLIC_INTERFACE
 /**
