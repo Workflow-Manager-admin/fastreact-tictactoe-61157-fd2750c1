@@ -52,6 +52,30 @@ function GameBoard() {
     // Extra diagnostic logging
     // eslint-disable-next-line no-console
     console.log("updateGameState - received board:", data.board);
+    // Print detailed structure
+    // eslint-disable-next-line no-console
+    if (window && typeof window !== "undefined") {
+      try {
+        console.log("Detailed board typeof:", typeof data.board, "Array.isArray:", Array.isArray(data.board));
+        if (Array.isArray(data.board)) {
+          data.board.forEach((cell, idx) => {
+            console.log(`Board cell [${idx}] - typeof:`, typeof cell, "; value:", cell);
+            if (cell && typeof cell === "object") {
+              console.log(`Board cell [${idx}] (object):`, JSON.stringify(cell, null, 2));
+            }
+          });
+        }
+        // Also dump entire object as JSON if possible
+        try {
+          console.log("Full data response:", JSON.stringify(data, null, 2));
+        } catch (err) {
+          console.warn("Could not stringify data.board:", err);
+        }
+      } catch (err) {
+        // Fail-safe to never block update state
+        console.warn("Exception in board logging diagnostic:", err);
+      }
+    }
 
     // Make sure board is an array of strings, not array of objects or nested array
     let cleanBoard;
