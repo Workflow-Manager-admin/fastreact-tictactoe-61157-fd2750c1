@@ -12,15 +12,31 @@ function Square({ value, onClick, highlight }) {
   if (typeof value === "string") {
     displayValue = value === "X" || value === "O" ? value : "";
   } else if (value && typeof value === "object") {
-    // Warn in development if value is not string
-    if (process.env.NODE_ENV === "development") {
+    // Warn in ALL environments if value is not string
+    // eslint-disable-next-line no-console
+    console.warn("Square received object as value! Rendering empty cell. Value was:", value);
+    // For diagnostics, also try to extract inner value field
+    if ("value" in value && (value.value === "X" || value.value === "O" || value.value === "")) {
+      displayValue = value.value;
       // eslint-disable-next-line no-console
-      console.warn("Square received object as value! Will render empty cell.", value);
+      console.warn("Square: used .value field from object for displayValue:", displayValue);
+    } else if ("symbol" in value && (value.symbol === "X" || value.symbol === "O" || value.symbol === "")) {
+      displayValue = value.symbol;
+      // eslint-disable-next-line no-console
+      console.warn("Square: used .symbol field from object for displayValue:", displayValue);
+    } else if ("player" in value && (value.player === "X" || value.player === "O")) {
+      displayValue = value.player;
+      // eslint-disable-next-line no-console
+      console.warn("Square: used .player field from object for displayValue:", displayValue);
+    } else {
+      displayValue = "";
     }
-    displayValue = "";
   } else {
     displayValue = "";
   }
+  // Log what will actually display
+  // eslint-disable-next-line no-console
+  console.log("Square displayValue:", displayValue, "for input value:", value);
   return (
     <button
       className="ttt-square"

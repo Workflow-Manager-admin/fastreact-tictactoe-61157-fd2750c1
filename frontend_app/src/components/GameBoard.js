@@ -49,10 +49,51 @@ function GameBoard() {
 
   // Update all state fields from backend response obj
   function updateGameState(data) {
-    // Defensive: make sure board is an array of strings, not objects
-    let cleanBoard = Array.isArray(data.board)
-      ? data.board.map(cell => (typeof cell === "string" ? cell : ""))
-      : Array(9).fill("");
+    // Extra diagnostic logging
+    // eslint-disable-next-line no-console
+    console.log("updateGameState - received board:", data.board);
+
+    // Make sure board is an array of strings, not array of objects or nested array
+    let cleanBoard;
+
+    if (Array.isArray(data.board)) {
+      cleanBoard = data.board.map((cell, idx) => {
+        // If cell is string 'X' or 'O' or '', keep it.
+        if (typeof cell === "string") return cell === "X" || cell === "O" ? cell : "";
+        // If cell is an object with .value or .symbol field, try to extract.
+        if (cell && typeof cell === "object") {
+          if ("value" in cell && (cell.value === "X" || cell.value === "O" || cell.value === "")) {
+            // eslint-disable-next-line no-console
+            console.warn("GameBoard: Board cell object at", idx, "- using .value field", cell);
+            return cell.value;
+          }
+          if ("symbol" in cell && (cell.symbol === "X" || cell.symbol === "O" || cell.symbol === "")) {
+            // eslint-disable-next-line no-console
+            console.warn("GameBoard: Board cell object at", idx, "- using .symbol field", cell);
+            return cell.symbol;
+          }
+          // If known shape (backend bug, but keep safe)
+          if ("player" in cell) {
+            // eslint-disable-next-line no-console
+            console.warn("GameBoard: Board cell object at", idx, "- using .player field", cell);
+            return cell.player === "X" || cell.player === "O" ? cell.player : "";
+          }
+          // Log generic warning
+          // eslint-disable-next-line no-console
+          console.warn("GameBoard: Board cell object at", idx, "- Unexpected object. Will render as empty.", cell);
+          return "";
+        }
+        // Unknown type? fallback
+        return "";
+      });
+    } else {
+      // If board is missing, fallback to new blank board.
+      cleanBoard = Array(9).fill("");
+    }
+    // Log post-processed board array for clarity
+    // eslint-disable-next-line no-console
+    console.log("updateGameState - cleanBoard:", cleanBoard);
+
     setSquares(cleanBoard);
     setCurrentPlayer(data.current_player ?? "X");
     setWinner(data.winner);
